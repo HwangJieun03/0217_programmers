@@ -109,3 +109,72 @@ var add4 = (x, y) => x + y;
 ### post는 웹브라우저로 테스트 안됨!! postman으로 확인
 - post는 데이터 본문 (body)에 포함해 전송하므로, URL에 데이터를 노출시키지 않는다!
 - 전체 조회할 때 오류가 난다면? 복사, 붙여넣기 문제!!!
+
+### forEach vs map
+- forEach
+  - 반복 작업 수행하며, 각 요소에 대해 콜백 함수 호출
+  - return 값은 무시
+- map
+  - 각 요소에 대해 콜백 함수 실행한 후, 그 결과로 새로운 배열 반환
+  - 반환된 값은 새로운 배열에 저장
+
+### 리팩토링; 수정 후 추가
+1. 에러가 n번 발견됐을 때 리팩토링
+2. 기능을 추가하기 전 리팩토링
+3. 코드 리뷰할 때 리팩토링
+4. 리팩토링 하면서 에러 발견
+- 배포, 운영 직전에는 절대 리팩토링 X
+
+### HTTP 상태 코드
+- 200 OK : 클라이언트 요청 성공적으로 처리 (조회 성공)
+- 201 Creatted : 클라이언트 요청 성공적 처리, 그 결과로 새로운 리소스 생성 (등록 성공)
+- 400 Bad request : 클라이언트가 보낸 요청이 잘못됨.
+- 403 Forbidden : 클라이언트가 요청한 리소스에 대한 접근 금지 
+- 404 Not Found : 클라이언트가 요청한 리소스를 서버에서 찾을 수 없음.
+- 500 Internal Server Error : 서버 내부에서 예기치 않은 오류가 발생하여 요청을 처리할 수 없음.
+
+### PUT 예외처리 에러 발생
+- youtuber가 undefined일 때 youtuber.channelTitle에 접근하려고 하기 때문에 에러가 발생함.
+```
+// 예외 처리
+  var youtuber = db.get(id);
+  var oldTitle = youtuber.channelTitle;
+
+  if (youtuber == undefined) {
+    res.json({
+      message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
+    });
+  } else {
+    var newTitle = req.body.channelTitle;
+
+    youtuber.channelTitle = newTitle;
+    db.set(id, youtuber);
+
+    res.json({
+      message: `${oldTitle}님, 채널명이 ${newTitle}로 변경되었습니다.`,
+    });
+  }
+```
+- youtuber가 undefined인지 확인하고, oldTitle 설정 부분을 else 블록 안으로 옮겨서 youtuber가 undefined가 아닐 때만 channelTitle 프로퍼티에 접근하도록 수정했더니 에러 해결!
+```
+// 예외 처리
+  var youtuber = db.get(id);
+
+  if (youtuber == undefined) {
+    res.json({
+      message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
+    });
+  } else {
+  // else 블록 안으로옮겨서 youtuber가 undefined가 아닐때만 
+  // channelTitle 프로퍼티에 접근하도록 함.
+    var oldTitle = youtuber.channelTitle; 
+    var newTitle = req.body.channelTitle;
+
+    youtuber.channelTitle = newTitle;
+    db.set(id, youtuber);
+
+    res.json({
+      message: `${oldTitle}님, 채널명이 ${newTitle}로 변경되었습니다.`,
+    });
+  }
+```
