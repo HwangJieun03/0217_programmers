@@ -40,11 +40,28 @@ db.set(id++, youtuber3);
 // console.log(db.get(3));
 
 // REST API 설계
+
+// 전체 조회
 app.get("/youtubers", (req, res) => {
-  res.json({ message: "test" });
+  // 내가 찾은 방법
+  const values = [];
+  db.forEach(function (youtuber) {
+    console.log(youtuber);
+    values.push(youtuber);
+  });
+  res.json(values);
+
+  // 강사님 버전
+  // var youtubers = {};
+  // db.forEach(function (value, key) {
+  //   youtubers[key] = value;
+  // });
+
+  // res.json(youtubers);
 });
 
-app.get("/youtuber/:id", function (req, res) {
+// 개별 유튜버 조회
+app.get("/youtubers/:id", function (req, res) {
   let { id } = req.params;
   //console.log(id); // id 잘 찍히는지 확인하기
   id = parseInt(id); // "숫자" => 숫자
@@ -61,8 +78,9 @@ app.get("/youtuber/:id", function (req, res) {
   }
 });
 
+// 유튜버 등록
 app.use(express.json()); // http 외 모듈인 '미들웨어' : json 설정
-app.post("/youtuber", (req, res) => {
+app.post("/youtubers", (req, res) => {
   console.log(req.body);
 
   // 등록? Map(db)에 저장(set) 해야 한다!
@@ -74,4 +92,73 @@ app.post("/youtuber", (req, res) => {
       db.get(id - 1).channelTitle
     }님, 유튜브 채널 개설을 축하드립니다!`,
   });
+});
+
+// 개별 유튜버 삭제
+app.delete("/youtubers/:id", (req, res) => {
+  let { id } = req.params;
+  id = parseInt(id); // "숫자" => 숫자
+
+  // 예외 처리
+  var youtuber = db.get(id);
+  if (youtuber == undefined) {
+    res.json({
+      message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
+    });
+  } else {
+    const channelTitle = youtuber.channelTitle;
+    db.delete(id);
+    res.json({
+      message: `${channelTitle}님, 아쉽지만 앞으로의 여정도 응원하겠습니다!`,
+    });
+  }
+});
+
+// 전체 유튜버 삭제
+app.delete("/youtubers", (req, res) => {
+  var msg = "";
+  // db에 값이 1개 이상이면 전체 삭제
+  if (db.size >= 1) {
+    db.clear();
+    msg = "전체 유튜버가 삭제되었습니다.";
+    // res.json({
+    //   message: "유튜버가 모두 삭제되었습니다.",
+    // });
+
+    // 값이 없으면, "삭제할 유튜버가 없습니다."
+  } else {
+    msg = "전체 유튜버가 삭제되었습니다.";
+    // res.json({
+    //   message: "삭제할 유튜버가 없습니다.",
+    // });
+  }
+  res.json({
+    message: msg,
+  });
+});
+
+// 개별 유튜버 수정
+app.put("/youtubers/:id", (req, res) => {
+  let { id } = req.params;
+  id = parseInt(id); // "숫자" => 숫자
+  //var oldTitle = youtuber.channelTitle; // 예외처리에 에러 발생!!! 위치 변경경
+
+  // 예외 처리
+  var youtuber = db.get(id);
+
+  if (youtuber == undefined) {
+    res.json({
+      message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
+    });
+  } else {
+    var oldTitle = youtuber.channelTitle; // else 블록 안으로옮겨서 youtuber가 undefined가 아닐때만 channelTitle 프로퍼티에 접근하도록 함.
+    var newTitle = req.body.channelTitle;
+
+    youtuber.channelTitle = newTitle;
+    db.set(id, youtuber);
+
+    res.json({
+      message: `${oldTitle}님, 채널명이 ${newTitle}로 변경되었습니다.`,
+    });
+  }
 });
