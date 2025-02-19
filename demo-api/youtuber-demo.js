@@ -44,20 +44,27 @@ db.set(id++, youtuber3);
 // 전체 조회
 app.get("/youtubers", (req, res) => {
   // 내가 찾은 방법
-  const values = [];
-  db.forEach(function (youtuber) {
-    console.log(youtuber);
-    values.push(youtuber);
-  });
-  res.json(values);
+  // const values = [];
+  // db.forEach(function (youtuber) {
+  //   console.log(youtuber);
+  //   values.push(youtuber);
+  // });
+  // res.json(values);
 
   // 강사님 버전
-  // var youtubers = {};
-  // db.forEach(function (value, key) {
-  //   youtubers[key] = value;
-  // });
+  var youtubers = {};
+  console.log(db);
+  if (db.size !== 0) {
+    db.forEach(function (value, key) {
+      youtubers[key] = value;
+    });
 
-  // res.json(youtubers);
+    res.json(youtubers);
+  } else {
+    res.status(404).json({
+      message: "조회할 유튜버가 없습니다.",
+    });
+  }
 });
 
 // 개별 유튜버 조회
@@ -69,8 +76,7 @@ app.get("/youtubers/:id", function (req, res) {
   // 예외 처리
   const youtuber = db.get(id);
   if (youtuber == undefined) {
-    //undefined는 문자열이 아니다!
-    res.json({
+    res.status(404).json({
       message: "존재하지 않는 유튜버입니다.",
     });
   } else {
@@ -81,17 +87,23 @@ app.get("/youtubers/:id", function (req, res) {
 // 유튜버 등록
 app.use(express.json()); // http 외 모듈인 '미들웨어' : json 설정
 app.post("/youtubers", (req, res) => {
-  console.log(req.body);
+  const channelTitle = req.body.channelTitle;
+  // 예외 처리
+  if (channelTitle) {
+    // 등록? Map(db)에 저장(set) 해야 한다!
+    db.set(id++, req.body);
 
-  // 등록? Map(db)에 저장(set) 해야 한다!
-  db.set(id++, req.body);
-
-  res.json({
-    //message: db.get(4).channelTitle + "님, 유튜브 채널 개설을 축하드립니다!",
-    message: `${
-      db.get(id - 1).channelTitle
-    }님, 유튜브 채널 개설을 축하드립니다!`,
-  });
+    res.status(201).json({
+      //message: db.get(4).channelTitle + "님, 유튜브 채널 개설을 축하드립니다!",
+      message: `${
+        db.get(id - 1).channelTitle
+      }님, 유튜브 채널 개설을 축하드립니다!`,
+    });
+  } else {
+    res.status(400).json({
+      message: "요청 값이 잘못되었습니다.",
+    });
+  }
 });
 
 // 개별 유튜버 삭제
@@ -101,17 +113,28 @@ app.delete("/youtubers/:id", (req, res) => {
 
   // 예외 처리
   var youtuber = db.get(id);
-  if (youtuber == undefined) {
-    res.json({
-      message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
-    });
-  } else {
+  if (youtuber) {
     const channelTitle = youtuber.channelTitle;
     db.delete(id);
     res.json({
       message: `${channelTitle}님, 아쉽지만 앞으로의 여정도 응원하겠습니다!`,
     });
+  } else {
+    res.status(404).json({
+      message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
+    });
   }
+  // if (youtuber == undefined) {
+  //   res.json({
+  //     message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
+  //   });
+  // } else {
+  //   const channelTitle = youtuber.channelTitle;
+  //   db.delete(id);
+  //   res.json({
+  //     message: `${channelTitle}님, 아쉽지만 앞으로의 여정도 응원하겠습니다!`,
+  //   });
+  // }
 });
 
 // 전체 유튜버 삭제
@@ -120,21 +143,17 @@ app.delete("/youtubers", (req, res) => {
   // db에 값이 1개 이상이면 전체 삭제
   if (db.size >= 1) {
     db.clear();
-    msg = "전체 유튜버가 삭제되었습니다.";
-    // res.json({
-    //   message: "유튜버가 모두 삭제되었습니다.",
-    // });
+
+    res.json({
+      message: "유튜버가 모두 삭제되었습니다.",
+    });
 
     // 값이 없으면, "삭제할 유튜버가 없습니다."
   } else {
-    msg = "전체 유튜버가 삭제되었습니다.";
-    // res.json({
-    //   message: "삭제할 유튜버가 없습니다.",
-    // });
+    res.status(404).json({
+      message: "삭제할 유튜버가 없습니다.",
+    });
   }
-  res.json({
-    message: msg,
-  });
 });
 
 // 개별 유튜버 수정
@@ -147,7 +166,7 @@ app.put("/youtubers/:id", (req, res) => {
   var youtuber = db.get(id);
 
   if (youtuber == undefined) {
-    res.json({
+    res.status(404).json({
       message: `요청하신 ${id}번은 존재하지 않는 유튜버입니다.`,
     });
   } else {

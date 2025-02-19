@@ -21,4 +21,3 @@ app.get("/products/1", function (req, res) {
   res.json(nodejsBook);
 });
 
-// app.listen(1234); //포트번호 1234
