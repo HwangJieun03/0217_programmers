@@ -1,3 +1,4 @@
+## 02/17
 ### express 설치 
 - npm i express
 ```
@@ -110,6 +111,7 @@ var add4 = (x, y) => x + y;
 - post는 데이터 본문 (body)에 포함해 전송하므로, URL에 데이터를 노출시키지 않는다!
 - 전체 조회할 때 오류가 난다면? 복사, 붙여넣기 문제!!!
 
+## 02/18
 ### forEach vs map
 - forEach
   - 반복 작업 수행하며, 각 요소에 대해 콜백 함수 호출
@@ -178,3 +180,68 @@ var add4 = (x, y) => x + y;
     });
   }
 ```
+## 02/19
+### 핸들러란?
+- HTTP request가 날아오면 자동으로 호출되는 메소드
+- 이벤트 핸들러 : 프로그램에서 특정 이벤트가 발생했을 때 처리하는 역할
+- 요청 핸들러 : 서버에서 클라이언트의 요청을 처리하는 역할 (HTTP 요청)
+- 예외 핸들러 : 코드 실행 중 발생할 수 있는 예외나 오류 처리하는 역할
+### json array
+- 여러 개의 값을 순서대로 나열한 자료 구조
+- 인덱스를 기반으로 값을 조회
+  ```
+  app.get("/colors/:id", (req, res) => {
+  let id = req.params.id;
+  let color = colors[id];
+
+  res.json(color);
+});
+```
+- forEach나 find()로 id 비교
+```
+// forEach
+app.get("/colors/:id", (req, res) => {
+  let id = req.params.id;
+  var findColor = "";
+
+  colors.forEach(function (color) {
+    if (color.id == id) {  // colors 배열에서 각 색깔의 id와 요청받은 id 비교
+      findColor = color;
+    }
+  });
+  res.json(findColor);
+});
+
+// find 함수 : colors 배열 안에 있는 객체 중, id 값이 params.id와 같은 객체
+app.get("/colors/:id", (req, res) => {
+  let id = req.params.id;
+  var findColor = colors.find((f) => f.id == id);
+  res.json(findColor);
+});
+'''
+### 예외 처리
+- HTTP status 코드로 예외 처리
+```
+// 예외 처리
+  if (findColor) {
+    res.json(findColor);
+  } else {
+    // 예외를 터뜨린다; http status code를 실패로 안내
+    res.status(404).send("요청하신 id로 저장된 색깔이 없습니다.");
+  }
+```
+### '==' vs '==='
+- '==' : 자료형은 상관 없이, 값만 비교
+- '===' : 자료형, 값 모두 비교
+### map은 undefined가 아니다.
+- Map 객체가 생성된 후 그 자체로는 유효한 객체
+- 객체에 값이 없으면 0을 반환
+### HTTP 상태 코드 정리
+- **2**** : 성공
+    - 조회/수정/삭제 성공 : **200**
+    - 등록 성공 : **201**
+- **4**** : 클라이언트 오류
+    - 요청한 연산(처리)을 할 때 필요한 데이터 (req)가 덜 왔을 때 : **400**
+    - 찾는 페이지(리소스) 없음 (URL에 맞는 api가 없음) : **404**
+- **5**** : 서버 오류
+    - 서버가 죽었을 때 (서버가 크리티컬한 오류를 맞았을 때) : **500**
